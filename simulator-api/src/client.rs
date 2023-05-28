@@ -21,19 +21,28 @@ pub enum Event {
 #[derive(Serialize, Deserialize)]
 #[non_exhaustive]
 pub enum DisplayEvent {
+    /// lcd_initialize
     Init,
+    /// lcd_shutdown
     Deinit,
+    /// Some lines on the LCD have changed.
     Update { lines_delta: HashMap<u8, String> },
+    /// lcd_clear
     Clear,
+    /// lcd_set_background_color
     SetBackgroundColor { rgba: u32 },
+    /// lcd_set_text_color
     SetTextColor { rgba: u32 },
 }
 
 #[derive(Serialize, Deserialize)]
 #[non_exhaustive]
 pub enum LogEvent {
+    /// Information is available
     Info(String),
+    /// Something isn't right, but it's not enough to crash
     Warning(String),
+    /// An error has occurred
     Error(String),
 }
 
