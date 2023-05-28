@@ -6,20 +6,12 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-runtime = [
-    "dep:anyhow",
-    "dep:snafu",
-    "dep:wasmtime",
-    "dep:jsonl",
-    "dep:pros-simulator-api",
-]
-default = ["runtime"]
 
 
 [dependencies]
-anyhow = { version = "1.0", optional = true }
-snafu = { version = "0.7", features = ["backtraces"], optional = true }
-wasmtime = { version = "9.0", features = ["async"], optional = true }
+anyhow = { version = "1.0" }
+snafu = { version = "0.7", features = ["backtraces"] }
+wasmtime = { version = "9.0", features = ["async"] }
 pros-simulator-macros = { path = "./macros" }
-jsonl = { workspace = true, optional = true }
-pros-simulator-api = { path = "../simulator-api", optional = true }
+jsonl = { workspace = true }
+pros-simulator-api = { path = "../simulator-api" }

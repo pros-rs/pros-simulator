@@ -40,9 +40,12 @@ fn main() -> Result<()> {
 }
 
 fn run_simulator(tx: mpsc::Sender<client::Event>) -> Result<()> {
-    let wasm = include_bytes!("../lcd_print.wasm");
+    let wasm_path = std::env::args()
+        .nth(1)
+        .expect("Usage: pros-simulator <wasm file>");
+    let wasm = std::fs::read(wasm_path)?;
 
-    let mut robot = Robot::new(wasm, tx)?;
+    let mut robot = Robot::new(&wasm, tx)?;
     robot.initialize()?;
 
     Ok(())

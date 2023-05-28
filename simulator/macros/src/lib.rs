@@ -193,29 +193,13 @@ fn define_api_impl(input: TokenStream) -> TokenStream {
         .map(|ident| ident.to_string())
         .unwrap_or_else(|| "pros".to_string());
 
-    let mut bindings = TokenStream::new();
     let mut exports = TokenStream::new();
 
     for implementation_module in input.implementation_modules {
         for func in implementation_module.fns {
             // wasm "types" are enum variants that can be used with a linker to export a function signature to the simulated code
             let wasm_types = func.arg_types_as_wasm();
-            let ApiFn {
-                ident,
-                inputs,
-                output,
-                ..
-            } = func;
-            let name_span = ident.span();
-
-            // this will be used on the simulated (client) side to bind to the exported function
-            bindings.extend(quote_spanned! { name_span=>
-                #[cfg(not(feature = "runtime"))]
-                #[link(wasm_import_module = #wasm_import_module)]
-                extern "C" {
-                    pub fn #ident(#inputs) #output;
-                }
-            });
+            let ApiFn { ident, output, .. } = func;
 
             // although wasm functions can have multiple return values we'll only be using 1
             let ret_type: proc_macro2::TokenStream = match output {
@@ -248,9 +232,6 @@ fn define_api_impl(input: TokenStream) -> TokenStream {
     }
 
     quote! {
-        #bindings
-
-        #[cfg(feature = "runtime")]
         pub fn link_api<'a>(linker: &mut wasmtime::Linker<State>, module: &wasmtime::Module) -> Result<(), anyhow::Error> {
             for import in module.imports() {
                 match (import.module(), import.name()) {

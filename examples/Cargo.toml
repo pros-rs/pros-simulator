@@ -1,5 +1,0 @@
-[workspace]
-members = ["lcd_print"]
-
-[workspace.dependencies]
-pros-simulator = { path = "../simulator", default-features = false }
