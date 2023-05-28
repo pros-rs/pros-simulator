@@ -1,16 +1,25 @@
 use crate::*;
+use pros_simulator_api::client;
+use std::sync::mpsc::Sender;
 use std::{cell::RefCell, rc::Rc};
 use wasmtime::*;
 
 pub type StateWrapper = Rc<RefCell<RobotState>>;
 
-#[derive(Default)]
 pub struct RobotState {
     pub memory: Option<RobotMemory>,
     pub indirect_fn_table: Option<Table>,
+    pub tx_event: Sender<client::Event>,
 }
 
 impl RobotState {
+    pub fn new(tx_event: Sender<client::Event>) -> Self {
+        Self {
+            memory: None,
+            indirect_fn_table: None,
+            tx_event,
+        }
+    }
     pub fn memory(&self) -> &RobotMemory {
         self.memory.as_ref().unwrap()
     }

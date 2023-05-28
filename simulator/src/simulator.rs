@@ -1,6 +1,7 @@
-use std::{cell::RefCell, rc::Rc};
+use std::{cell::RefCell, rc::Rc, sync::mpsc::Sender};
 
 use crate::*;
+use pros_simulator_api::client;
 use snafu::{Backtrace, Snafu};
 use wasmtime::*;
 
@@ -21,7 +22,7 @@ pub struct Robot {
 }
 
 impl Robot {
-    pub fn new(wasm: &[u8]) -> Result<Self> {
+    pub fn new(wasm: &[u8], tx_event: Sender<client::Event>) -> Result<Self> {
         let engine = Engine::new(
             Config::new()
                 .debug_info(true)
@@ -33,7 +34,7 @@ impl Robot {
         )?;
         let module = Module::new(&engine, wasm)?;
 
-        let robot_state = Rc::new(RefCell::new(RobotState::default()));
+        let robot_state = Rc::new(RefCell::new(RobotState::new(tx_event)));
         let mut store = Store::new(&engine, robot_state);
 
         let mut linker = Linker::new(&engine);

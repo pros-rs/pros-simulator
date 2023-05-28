@@ -1,5 +1,8 @@
+use std::collections::HashMap;
+
 use crate::*;
 use anyhow::Error;
+use pros_simulator_api::client::{DisplayEvent, Event};
 use wasmtime::*;
 
 // (line_num: i32, str_ptr: i32, str_len: i32) -> ()
@@ -23,6 +26,9 @@ pub fn lcd_print(
         )
         .to_string();
 
-    println!("lcd_print (line {}): {}", line_num, line);
+    state.tx_event.send(Event::Display(DisplayEvent::Update {
+        lines_delta: HashMap::from([(line_num.try_into()?, line)]),
+    }))?;
+
     Ok(())
 }

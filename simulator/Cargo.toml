@@ -12,3 +12,4 @@ snafu = { version = "0.7", features = ["backtraces"] }
 wasmtime = { version = "9.0", features = ["async"] }
 pros-simulator-macros = { path = "./macros" }
 jsonl = { workspace = true }
+pros-simulator-api = { path = "../simulator-api" }

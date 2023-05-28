@@ -1,8 +1,10 @@
 use anyhow::Result;
 use jsonl::Connection;
 use pros_simulator::*;
+use pros_simulator_api::*;
 use std::panic;
 use std::process;
+use std::sync::mpsc;
 use std::thread::spawn;
 use wasmtime::*;
 
@@ -14,21 +16,29 @@ fn main() -> Result<()> {
         process::exit(1);
     }));
 
-    let connection = Connection::new_from_stdio();
+    let mut connection = Connection::new_from_stdio();
+    let (outgoing_tx, outgoing_rx) = mpsc::channel::<client::Event>();
 
-    spawn(|| {
-        run_simulator().unwrap();
-    })
-    .join()
-    .unwrap();
+    let simulator_thread = spawn(move || {
+        run_simulator(outgoing_tx).unwrap();
+    });
+
+    let tx_thread = spawn(move || {
+        while let Ok(event) = outgoing_rx.recv() {
+            connection.write(&event).unwrap();
+        }
+    });
+
+    simulator_thread.join().unwrap();
+    tx_thread.join().unwrap();
 
     Ok(())
 }
 
-fn run_simulator() -> Result<()> {
-    let wat = include_bytes!("../test.wasm");
+fn run_simulator(tx: mpsc::Sender<client::Event>) -> Result<()> {
+    let wasm = include_bytes!("../test.wasm");
 
-    let mut robot = Robot::new(wat)?;
+    let mut robot = Robot::new(wasm, tx.clone())?;
 
     let state = robot.store.state();
     let mut state = state.borrow_mut();
@@ -36,8 +46,6 @@ fn run_simulator() -> Result<()> {
     let init = robot
         .instance
         .get_typed_func::<(), i32>(&mut robot.store, "get_callback")?;
-
-    println!("Getting cb");
 
     let cb = {
         let cb_ptr = init.call(&mut robot.store.as_context_mut(), ())?;
@@ -61,8 +69,6 @@ fn run_simulator() -> Result<()> {
 
     drop(state);
 
-    println!("Calling");
-
     cb.typed::<(i32, i32), ()>(robot.store.as_context())
         .unwrap()
         .call(robot.store.as_context_mut(), location.as_wasm_tuple())?;
@@ -73,6 +79,8 @@ fn run_simulator() -> Result<()> {
     let mut state = state.borrow_mut();
     let robot_mem = state.memory_mut();
     robot_mem.get_owned(robot.store.as_context_mut(), location);
+
+    tx.send(client::Event::ProgramFinished).unwrap();
 
     Ok(())
 }
