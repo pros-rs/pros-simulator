@@ -1,4 +1,4 @@
-// rustc --target wasm32-unknown-unknown test.rs -o test.wasm
+// rustc --target wasm32-unknown-unknown -Clink-arg=--export-table test.rs -o test.wasm
 
 #![no_main]
 
@@ -48,4 +48,9 @@ pub extern "C" fn print_something(fragment: *const u8, length: usize) {
     unsafe {
         lcd_print(0, message.as_ptr(), message.len());
     }
+}
+
+#[no_mangle]
+pub extern "C" fn get_callback() -> extern "C" fn(*const u8, usize) {
+    print_something
 }

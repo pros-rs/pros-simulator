@@ -6,5 +6,5 @@ mod state;
 pub use {
     memory::{MemoryHandle, MemoryLocation, RobotMemory, WasmPtr},
     simulator::Robot,
-    state::RobotState,
+    state::{CallerExt, RobotState, StateWrapper, StoreExt},
 };

@@ -670,6 +670,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "jsonl"
+version = "4.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1abae98f45234fc1980c198798166a80ad6b35eb5b7db4caa7bc72ff919e6b80"
+dependencies = [
+ "serde",
+ "serde_json",
+ "thiserror",
+]
+
+[[package]]
 name = "leb128"
 version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -814,9 +825,17 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "extism-pdk",
+ "jsonl",
  "pros-simulator-macros",
  "snafu",
  "wasmtime",
+]
+
+[[package]]
+name = "pros-simulator-api"
+version = "0.1.0"
+dependencies = [
+ "serde",
 ]
 
 [[package]]

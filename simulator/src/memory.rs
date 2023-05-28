@@ -10,7 +10,7 @@ pub struct RobotMemory {
 }
 
 impl RobotMemory {
-    pub fn new(mut store: &mut Store<RobotState>, instance: &Instance) -> Self {
+    pub fn new(mut store: &mut Store<StateWrapper>, instance: &Instance) -> Self {
         Self {
             wasm_memory: instance
                 .get_memory(&mut store, "memory")

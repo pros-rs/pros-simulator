@@ -15,9 +15,9 @@ type Result<T, E = RobotError> = std::result::Result<T, E>;
 
 pub struct Robot {
     pub module: Module,
-    pub linker: Linker<RobotState>,
+    pub linker: Linker<StateWrapper>,
     pub instance: Instance,
-    pub store: Store<RobotState>,
+    pub store: Store<StateWrapper>,
 }
 
 impl Robot {
@@ -33,7 +33,7 @@ impl Robot {
         )?;
         let module = Module::new(&engine, wasm)?;
 
-        let robot_state = RobotState::default();
+        let robot_state = Rc::new(RefCell::new(RobotState::default()));
         let mut store = Store::new(&engine, robot_state);
 
         let mut linker = Linker::new(&engine);
@@ -41,9 +41,10 @@ impl Robot {
 
         let instance = linker.instantiate(&mut store, &module)?;
 
-        store.data_mut().memory = Some(Rc::new(RefCell::new(RobotMemory::new(
-            &mut store, &instance,
-        ))));
+        let state = store.state();
+        let mut state = state.borrow_mut();
+        state.memory = Some(RobotMemory::new(&mut store, &instance));
+        state.indirect_fn_table = instance.get_table(&mut store, "__indirect_function_table");
 
         Ok(Self {
             module,

@@ -3,7 +3,7 @@ use pros_simulator_macros::define_api;
 
 pub mod lcd;
 
-type State = RobotState;
+type State = StateWrapper;
 define_api! {
     wasm_import_module = pros_v0;
 
