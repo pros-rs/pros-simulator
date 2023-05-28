@@ -4,10 +4,18 @@ use std::collections::HashMap;
 #[derive(Serialize, Deserialize)]
 #[non_exhaustive]
 pub enum Event {
+    /// LCD-related events
     Display(DisplayEvent),
-    Init(InitEvent),
     Log(LogEvent),
-    ProgramFinished,
+    /// A user-provided function (e.g. initialize, autonomous, opcontrol) has finished.
+    ProgramFinish {
+        program_type: ProgramType,
+        error: Option<String>,
+    },
+    /// The simulator has finished setup and is now running user code.
+    SimulatorRunning,
+    /// The simulator has finished and will no longer run user code.
+    SimulatorStopped,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -23,15 +31,17 @@ pub enum DisplayEvent {
 
 #[derive(Serialize, Deserialize)]
 #[non_exhaustive]
-pub enum InitEvent {
-    Success,
-    Failure { error: String },
-}
-
-#[derive(Serialize, Deserialize)]
-#[non_exhaustive]
 pub enum LogEvent {
     Info(String),
     Warning(String),
     Error(String),
+}
+
+#[derive(Serialize, Deserialize)]
+pub enum ProgramType {
+    Initialize,
+    Autonomous,
+    OpControl,
+    CompetitionInitialize,
+    Disabled,
 }

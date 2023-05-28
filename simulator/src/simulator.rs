@@ -1,7 +1,7 @@
 use std::{cell::RefCell, rc::Rc, sync::mpsc::Sender};
 
 use crate::*;
-use pros_simulator_api::client;
+use pros_simulator_api::client::{Event, ProgramType};
 use snafu::{Backtrace, Snafu};
 use wasmtime::*;
 
@@ -22,7 +22,7 @@ pub struct Robot {
 }
 
 impl Robot {
-    pub fn new(wasm: &[u8], tx_event: Sender<client::Event>) -> Result<Self> {
+    pub fn new(wasm: &[u8], tx_event: Sender<Event>) -> Result<Self> {
         let engine = Engine::new(
             Config::new()
                 .debug_info(true)
@@ -34,7 +34,7 @@ impl Robot {
         )?;
         let module = Module::new(&engine, wasm)?;
 
-        let robot_state = Rc::new(RefCell::new(RobotState::new(tx_event)));
+        let robot_state = Rc::new(RefCell::new(RobotState::new(tx_event.clone())));
         let mut store = Store::new(&engine, robot_state);
 
         let mut linker = Linker::new(&engine);
@@ -47,11 +47,45 @@ impl Robot {
         state.memory = Some(RobotMemory::new(&mut store, &instance));
         state.indirect_fn_table = instance.get_table(&mut store, "__indirect_function_table");
 
+        tx_event.send(Event::SimulatorRunning).unwrap();
+
         Ok(Self {
             module,
             linker,
             instance,
             store,
         })
+    }
+
+    fn program_finish(&self, program_type: ProgramType, error: Option<&RobotError>) {
+        let state = self.store.state();
+        let state = state.borrow();
+
+        state
+            .tx_event
+            .send(Event::ProgramFinish {
+                program_type,
+                error: error.map(|err| err.to_string()),
+            })
+            .unwrap();
+    }
+
+    fn init_inner(&mut self) -> Result<()> {
+        let Some(init_fn) = self
+            .instance
+            .get_func(&mut self.store, "initialize") else {
+            return Ok(());
+        };
+
+        let init_fn = init_fn.typed::<(), ()>(&mut self.store)?;
+        init_fn.call(&mut self.store, ())?;
+
+        Ok(())
+    }
+
+    pub fn initialize(&mut self) -> Result<()> {
+        let res = self.init_inner();
+        self.program_finish(ProgramType::Initialize, res.as_ref().err());
+        res
     }
 }

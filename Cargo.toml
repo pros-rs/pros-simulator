@@ -1,5 +1,5 @@
 [workspace]
-members = ["simulator", "simulator-api"]
+members = ["simulator", "simulator-api", "examples/*"]
 
 [workspace.dependencies]
 jsonl = "4.0"
