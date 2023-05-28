@@ -210,7 +210,7 @@ fn define_api_impl(input: TokenStream) -> TokenStream {
 
             // this will be used on the simulated (client) side to bind to the exported function
             bindings.extend(quote_spanned! { name_span=>
-                #[cfg(target_arch = "wasm32")]
+                #[cfg(not(feature = "runtime"))]
                 #[link(wasm_import_module = #wasm_import_module)]
                 extern "C" {
                     pub fn #ident(#inputs) #output;
@@ -250,7 +250,7 @@ fn define_api_impl(input: TokenStream) -> TokenStream {
     quote! {
         #bindings
 
-        #[cfg(not(target_arch = "wasm32"))]
+        #[cfg(feature = "runtime")]
         pub fn link_api<'a>(linker: &mut wasmtime::Linker<State>, module: &wasmtime::Module) -> Result<(), anyhow::Error> {
             for import in module.imports() {
                 match (import.module(), import.name()) {

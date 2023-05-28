@@ -1,8 +1,15 @@
+#[cfg(feature = "runtime")]
 pub mod api;
+#[cfg(feature = "runtime")]
 pub mod memory;
+#[cfg(feature = "runtime")]
 pub mod simulator;
-mod state;
+#[cfg(feature = "runtime")]
+pub mod state;
 
+pub mod bindings;
+
+#[cfg(feature = "runtime")]
 pub use {
     memory::{MemoryHandle, MemoryLocation, RobotMemory, WasmPtr},
     simulator::Robot,

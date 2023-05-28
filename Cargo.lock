@@ -419,42 +419,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "extism-manifest"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "92701e1645baaad9cc95df4eebca36eaed6ff03af43ec7cf13dea111db48a7d1"
-dependencies = [
- "base64",
- "serde",
-]
-
-[[package]]
-name = "extism-pdk"
-version = "0.3.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "820b1eda730ae03685903c93f624950dcd269bacf011db743ec1d041ca2f6954"
-dependencies = [
- "anyhow",
- "base64",
- "extism-manifest",
- "extism-pdk-derive",
- "rmp-serde",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "extism-pdk-derive"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "69871c55f19ecab01bd966bfd4d0260cf9feefe090fa5b4e598c4656e16c9efc"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.17",
-]
-
-[[package]]
 name = "fallible-iterator"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -681,10 +645,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "lcd_print"
-version = "0.1.0"
-
-[[package]]
 name = "leb128"
 version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -754,15 +714,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "num-traits"
-version = "0.2.15"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "578ede34cf02f8924ab9447f50c28075b4d3e5b269972345e7e0372b38c6cdcd"
-dependencies = [
- "autocfg",
-]
-
-[[package]]
 name = "num_cpus"
 version = "1.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -828,7 +779,6 @@ name = "pros-simulator"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "extism-pdk",
  "jsonl",
  "pros-simulator-api",
  "pros-simulator-macros",
@@ -982,28 +932,6 @@ name = "regex-syntax"
 version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "436b050e76ed2903236f032a59761c1eb99e1b0aead2c257922771dab1fc8c78"
-
-[[package]]
-name = "rmp"
-version = "0.8.11"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "44519172358fd6d58656c86ab8e7fbc9e1490c3e8f14d35ed78ca0dd07403c9f"
-dependencies = [
- "byteorder",
- "num-traits",
- "paste",
-]
-
-[[package]]
-name = "rmp-serde"
-version = "1.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c5b13be192e0220b8afb7222aa5813cb62cc269ebb5cac346ca6487681d2913e"
-dependencies = [
- "byteorder",
- "rmp",
- "serde",
-]
 
 [[package]]
 name = "rustc-demangle"

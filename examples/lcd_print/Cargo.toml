@@ -8,3 +8,4 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [dependencies]
+pros-simulator = { path = "../../simulator", default-features = false }

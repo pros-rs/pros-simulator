@@ -38,7 +38,7 @@ impl Robot {
         let mut store = Store::new(&engine, robot_state);
 
         let mut linker = Linker::new(&engine);
-        api::link_api(&mut linker, &module)?;
+        bindings::link_api(&mut linker, &module)?;
 
         let instance = linker.instantiate(&mut store, &module)?;
 
