@@ -21,7 +21,7 @@ fn main() -> Result<()> {
     let simulator_thread = {
         let outgoing_tx = outgoing_tx.clone();
         spawn(move || {
-            run_simulator(outgoing_tx).unwrap();
+            _ = run_simulator(outgoing_tx);
         })
     };
 

@@ -18,6 +18,14 @@ define_api! {
         fn lcd_initialize() -> i32;
         fn lcd_shutdown() -> i32;
         fn lcd_is_initialized() -> i32;
+        fn lcd_clear() -> i32;
+        fn lcd_clear_line(line_num: i32) -> i32;
+        fn lcd_read_buttons() -> i32;
+        fn lcd_register_btn0_cb(callback: i32);
+        fn lcd_register_btn1_cb(callback: i32);
+        fn lcd_register_btn2_cb(callback: i32);
+        fn lcd_set_background_color(rgba: i32);
+        fn lcd_set_text_color(rgba: i32);
     }
 }
 

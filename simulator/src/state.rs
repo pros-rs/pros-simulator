@@ -64,11 +64,11 @@ impl RobotState {
     }
 
     pub fn lcd_initialize(&mut self) -> bool {
-        if self.lcd.is_enabled() {
+        if self.lcd.status.is_enabled() {
             self.warn("Cannot initialize LCD when it's already on");
             return false;
         }
-        self.lcd = LcdState::Enabled(LcdButtons::default());
+        self.lcd.status = LcdStatus::Enabled(LcdPressedButtons::empty());
         self.tx_event
             .send(client::Event::Display(client::DisplayEvent::Init))
             .unwrap();
@@ -76,11 +76,11 @@ impl RobotState {
     }
 
     pub fn lcd_shutdown(&mut self) -> Result<(), Errno> {
-        if !self.lcd.is_enabled() {
+        if !self.lcd.status.is_enabled() {
             self.warn("Cannot shutdown LCD when it's already off");
             return Err(Errno::ENXIO);
         }
-        self.lcd = LcdState::Disabled;
+        self.lcd.status = LcdStatus::Disabled;
         self.tx_event
             .send(client::Event::Display(client::DisplayEvent::Deinit))
             .unwrap();
@@ -111,7 +111,7 @@ impl RobotState {
     }
 
     pub fn lcd_set_text(&mut self, line: i32, text: &str) -> Result<(), Errno> {
-        if !self.lcd.is_enabled() {
+        if !self.lcd.status.is_enabled() {
             self.error("Cannot print to the LCD when it's off");
             return Err(Errno::ENXIO);
         }
@@ -127,6 +127,46 @@ impl RobotState {
             }))
             .unwrap();
         Ok(())
+    }
+
+    pub fn lcd_clear(&mut self) -> Result<(), Errno> {
+        if !self.lcd.status.is_enabled() {
+            self.error("Cannot clear the LCD when it's disabled");
+            return Err(Errno::ENXIO);
+        }
+
+        self.tx_event
+            .send(client::Event::Display(client::DisplayEvent::Update {
+                lines_delta: (0..8)
+                    .map(|line| (line, String::new()))
+                    .collect::<HashMap<_, _>>(),
+            }))
+            .unwrap();
+        Ok(())
+    }
+
+    pub fn lcd_set_background(&mut self, rgba: i32) {
+        if !self.lcd.status.is_enabled() {
+            self.error("Cannot set the LCD background when it's disabled");
+            return;
+        }
+        self.tx_event
+            .send(client::Event::Display(
+                client::DisplayEvent::SetBackgroundColor { rgba: rgba as u32 },
+            ))
+            .unwrap();
+    }
+
+    pub fn lcd_set_text_color(&mut self, rgba: i32) {
+        if !self.lcd.status.is_enabled() {
+            self.error("Cannot set the LCD text color when it's disabled");
+            return;
+        }
+        self.tx_event
+            .send(client::Event::Display(client::DisplayEvent::SetTextColor {
+                rgba: rgba as u32,
+            }))
+            .unwrap();
     }
 }
 

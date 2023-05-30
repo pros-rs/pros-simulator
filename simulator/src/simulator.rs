@@ -3,6 +3,7 @@ use std::{cell::RefCell, rc::Rc, sync::mpsc::Sender};
 use crate::*;
 use pros_simulator_api::client::{Event, ProgramType};
 use snafu::{Backtrace, Snafu};
+use std::any::Any;
 use wasmtime::*;
 
 #[derive(Debug, Snafu)]

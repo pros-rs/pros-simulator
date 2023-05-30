@@ -26,7 +26,7 @@ pub use {
     memory::{MemoryHandle, MemoryLocation, RobotMemory, WasmPtr},
     simulator::Robot,
     state::{
-        lcd::{LcdButtons, LcdState},
+        lcd::{LcdPressedButtons, LcdState, LcdStatus},
         AsState, RobotState, StateWrapper,
     },
 };
