@@ -247,9 +247,8 @@ fn define_api_impl(input: TokenStream) -> TokenStream {
 
 /// Create an interface for the simulator (host) and simulation (client) to communicate.
 ///
-/// On WASM targets, this creates `pub extern "C"` bindings for each function.
-/// On non-WASM target, this emits a function `link_api` that uses a Wasmtime linker to
-/// make the functions available to the simulation.
+/// This macro emits a function `link_api` that uses a Wasmtime linker and the simulated module to
+/// make the API functions available to the simulation.
 ///
 /// Directives take the form `name = value;` and come at the beginning of the block.
 /// Functions are contained in modules like this: `mod crate::api::lcd {...}`. Modules do

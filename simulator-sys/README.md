@@ -1,6 +1,6 @@
 # pros-simulator-sys
 
-> Bindings to the pros-rs simulator APIs.
+> Low-level bindings for writing applications that run in the pros-rs simulator.
 
 ## About
 
