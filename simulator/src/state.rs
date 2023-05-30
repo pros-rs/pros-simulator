@@ -19,6 +19,7 @@ pub struct RobotState {
     pub indirect_fn_table: Option<Table>,
     pub tx_event: Sender<client::Event>,
     pub lcd: LcdState,
+    // TODO: expose this via api
     pub errno: Errno,
 }
 
