@@ -1,8 +1,16 @@
+use crate::errno::Errno;
+use crate::state::lcd::LINE_WIDTH;
 use crate::*;
+use lazy_static::lazy_static;
 use pros_simulator_api::client;
+use regex::Regex;
+use std::collections::HashMap;
 use std::sync::mpsc::Sender;
 use std::{cell::RefCell, rc::Rc};
+use unicode_segmentation::UnicodeSegmentation;
 use wasmtime::*;
+
+pub mod lcd;
 
 pub type StateWrapper = Rc<RefCell<RobotState>>;
 
@@ -10,6 +18,8 @@ pub struct RobotState {
     pub memory: Option<RobotMemory>,
     pub indirect_fn_table: Option<Table>,
     pub tx_event: Sender<client::Event>,
+    pub lcd: LcdState,
+    pub errno: Errno,
 }
 
 impl RobotState {
@@ -18,6 +28,8 @@ impl RobotState {
             memory: None,
             indirect_fn_table: None,
             tx_event,
+            lcd: LcdState::default(),
+            errno: Errno::Success,
         }
     }
     pub fn memory(&self) -> &RobotMemory {
@@ -36,23 +48,103 @@ impl RobotState {
                 _ => panic!("Expected function reference in indirect function table"),
             })
     }
+
+    pub fn log(&self, message: client::LogEvent) {
+        self.tx_event.send(client::Event::Log(message)).unwrap();
+    }
+    pub fn info(&self, message: impl Into<String>) {
+        self.log(client::LogEvent::Info(message.into()));
+    }
+    pub fn warn(&self, message: impl Into<String>) {
+        self.log(client::LogEvent::Warning(message.into()));
+    }
+    pub fn error(&self, message: impl Into<String>) {
+        self.log(client::LogEvent::Error(message.into()));
+    }
+
+    pub fn lcd_initialize(&mut self) -> bool {
+        if self.lcd.is_enabled() {
+            self.warn("Cannot initialize LCD when it's already on");
+            return false;
+        }
+        self.lcd = LcdState::Enabled(LcdButtons::default());
+        self.tx_event
+            .send(client::Event::Display(client::DisplayEvent::Init))
+            .unwrap();
+        true
+    }
+
+    pub fn lcd_shutdown(&mut self) -> Result<(), Errno> {
+        if !self.lcd.is_enabled() {
+            self.warn("Cannot shutdown LCD when it's already off");
+            return Err(Errno::ENXIO);
+        }
+        self.lcd = LcdState::Disabled;
+        self.tx_event
+            .send(client::Event::Display(client::DisplayEvent::Deinit))
+            .unwrap();
+        Ok(())
+    }
+
+    /// Trim text to fit on a single line of the LCD. This method is
+    /// aware of unicode graphemes and will emit a warning if the text
+    /// is too long.
+    ///
+    /// See also: [`state::lcd::LINE_WIDTH`].
+    pub fn trim_text(&self, text: &str) -> String {
+        // TODO: how does pros handle newlines?
+        lazy_static! {
+            static ref NEWLINE: Regex = Regex::new("\r?\n").unwrap();
+        }
+
+        let first_line = NEWLINE.split(text).next().unwrap().graphemes(true);
+        let trimmed = first_line.take(LINE_WIDTH).collect::<String>();
+
+        if trimmed.len() < text.len() {
+            self.warn(format!(
+                "Trimming text printed to the LCD (expected < {LINE_WIDTH} characters without newlines): {text}",
+            ));
+        }
+
+        trimmed
+    }
+
+    pub fn lcd_set_text(&mut self, line: i32, text: &str) -> Result<(), Errno> {
+        if !self.lcd.is_enabled() {
+            self.error("Cannot print to the LCD when it's off");
+            return Err(Errno::ENXIO);
+        }
+        if !(0..8).contains(&line) {
+            self.error(format!("Cannot print to LCD line {line} (must be 0-7)"));
+            return Err(Errno::EINVAL);
+        }
+
+        let text = self.trim_text(text);
+        self.tx_event
+            .send(client::Event::Display(client::DisplayEvent::Update {
+                lines_delta: HashMap::from([(line.try_into().unwrap(), text)]),
+            }))
+            .unwrap();
+        Ok(())
+    }
 }
 
-pub trait StoreExt<T> {
+pub trait AsState<T> {
+    /// Create a new reference to the state - consider using [`AsState::with_state`] if possible.
     fn state(&self) -> Rc<RefCell<T>>;
+    /// Run a function with mutable access to the robot state and the store/caller.
+    fn with_state<U>(&mut self, f: impl FnOnce(&mut T, &mut Self) -> U) -> U {
+        f(&mut self.state().borrow_mut(), self)
+    }
 }
 
-impl<T> StoreExt<T> for Store<Rc<RefCell<T>>> {
+impl<T> AsState<T> for Store<Rc<RefCell<T>>> {
     fn state(&self) -> Rc<RefCell<T>> {
         self.data().clone()
     }
 }
 
-pub trait CallerExt<T> {
-    fn state(&self) -> Rc<RefCell<T>>;
-}
-
-impl<T> CallerExt<T> for Caller<'_, Rc<RefCell<T>>> {
+impl<T> AsState<T> for Caller<'_, Rc<RefCell<T>>> {
     fn state(&self) -> Rc<RefCell<T>> {
         self.data().clone()
     }

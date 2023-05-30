@@ -42,10 +42,10 @@ impl Robot {
 
         let instance = linker.instantiate(&mut store, &module)?;
 
-        let state = store.state();
-        let mut state = state.borrow_mut();
-        state.memory = Some(RobotMemory::new(&mut store, &instance));
-        state.indirect_fn_table = instance.get_table(&mut store, "__indirect_function_table");
+        store.with_state(|state, store| {
+            state.memory = Some(RobotMemory::new(store, &instance));
+            state.indirect_fn_table = instance.get_table(store, "__indirect_function_table");
+        });
 
         tx_event.send(Event::SimulatorRunning).unwrap();
 
@@ -57,17 +57,16 @@ impl Robot {
         })
     }
 
-    fn program_finish(&self, program_type: ProgramType, error: Option<&RobotError>) {
-        let state = self.store.state();
-        let state = state.borrow();
-
-        state
-            .tx_event
-            .send(Event::ProgramFinish {
-                program_type,
-                error: error.map(|err| err.to_string()),
-            })
-            .unwrap();
+    fn broadcast_program_finish(&mut self, program_type: ProgramType, error: Option<&RobotError>) {
+        self.store.with_state(|state, _| {
+            state
+                .tx_event
+                .send(Event::ProgramFinish {
+                    program_type,
+                    error: error.map(|err| err.to_string()),
+                })
+                .unwrap();
+        });
     }
 
     fn init_inner(&mut self) -> Result<()> {
@@ -85,7 +84,7 @@ impl Robot {
 
     pub fn initialize(&mut self) -> Result<()> {
         let res = self.init_inner();
-        self.program_finish(ProgramType::Initialize, res.as_ref().err());
+        self.broadcast_program_finish(ProgramType::Initialize, res.as_ref().err());
         res
     }
 }
