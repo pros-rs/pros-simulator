@@ -11,6 +11,7 @@ define_api! {
 
     mod self {
         fn get_errno() -> i32;
+        fn panic(msg_ptr: i32, msg_len: i32);
     }
 
     mod lcd {
@@ -41,4 +42,25 @@ pub fn get_errno(
         .into();
 
     Ok(())
+}
+
+// (i32, i32) -> ()
+pub fn panic(
+    mut caller: Caller<'_, StateWrapper>,
+    args: &[Val],
+    _ret: &mut [Val],
+) -> Result<(), Error> {
+    let msg_ptr = args[0].unwrap_i32();
+    let msg_len = args[1].unwrap_i32();
+
+    let message = caller.with_state(|state, caller| {
+        state
+            .memory()
+            .get(
+                caller.as_context_mut(),
+                MemoryLocation::new(msg_ptr as _, msg_len as _),
+            )
+            .to_string()
+    });
+    Err(anyhow::anyhow!("panic: {message}"))
 }

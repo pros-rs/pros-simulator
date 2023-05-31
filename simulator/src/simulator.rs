@@ -2,18 +2,7 @@ use std::{cell::RefCell, rc::Rc, sync::mpsc::Sender};
 
 use crate::*;
 use pros_simulator_api::client::{Event, ProgramType};
-use snafu::{Backtrace, Snafu};
-use std::any::Any;
 use wasmtime::*;
-
-#[derive(Debug, Snafu)]
-#[snafu(display("WASM error: {}", source), context(false))]
-pub struct RobotError {
-    source: wasmtime::Error,
-    backtrace: Backtrace,
-}
-
-type Result<T, E = RobotError> = std::result::Result<T, E>;
 
 pub struct Robot {
     pub module: Module,
@@ -58,13 +47,21 @@ impl Robot {
         })
     }
 
-    fn broadcast_program_finish(&mut self, program_type: ProgramType, error: Option<&RobotError>) {
+    fn broadcast_program_finish(&mut self, program_type: ProgramType, error: Option<&Error>) {
+        let error_message = error.map(|error| {
+            let mut message = error.source().unwrap().to_string();
+            if let Some(backtrace) = error.downcast_ref::<WasmBacktrace>() {
+                message.push_str("\n\n");
+                message.push_str(&backtrace.to_string());
+            }
+            message
+        });
         self.store.with_state(|state, _| {
             state
                 .tx_event
                 .send(Event::ProgramFinish {
                     program_type,
-                    error: error.map(|err| err.to_string()),
+                    error: error_message,
                 })
                 .unwrap();
         });

@@ -9,6 +9,10 @@ edition = "2021"
 name = "lcd_print"
 crate-type = ["cdylib"]
 
+[[example]]
+name = "panic"
+crate-type = ["cdylib"]
+
 [features]
 alloc = []
 default = ["alloc"]

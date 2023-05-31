@@ -10,7 +10,6 @@ edition = "2021"
 
 [dependencies]
 anyhow = { version = "1.0" }
-snafu = { version = "0.7", features = ["backtraces"] }
 wasmtime = { version = "9.0", features = ["async"] }
 pros-simulator-macros = { path = "./macros" }
 jsonl = { workspace = true }
