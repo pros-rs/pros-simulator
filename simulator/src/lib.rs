@@ -1,7 +1,7 @@
 pub mod api;
 pub mod errno;
 pub mod memory;
-pub mod simulator;
+pub mod robot;
 pub mod state;
 
 pub trait BoolExt {
@@ -24,7 +24,7 @@ impl BoolExt for bool {
 pub use {
     errno::{AsErrno, Errno},
     memory::{MemoryHandle, MemoryLocation, RobotMemory, WasmPtr},
-    simulator::Robot,
+    robot::Robot,
     state::{
         lcd::{LcdPressedButtons, LcdState, LcdStatus},
         AsState, RobotState, StateWrapper,
